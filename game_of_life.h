@@ -1,10 +1,10 @@
 #ifndef GAME_OF_LIFE_H
 #define GAME_OF_LIFE_H
 
-__device__ int countAliveNeis(int idx, bool *golState, int size);
+__device__ int countAliveNeis(int idx, bool *state, int size);
 
-__global__ void computeGameOfLifeStep(bool *currentGolState, bool *nextGolState, int size);
+__global__ void computeGameOfLifeStep(bool *currState, bool *nextState, int size);
 
-void calculateGameOfLife(bool *golState, int size, int steps);
+void calculateGameOfLife(bool *hostState, int size, int steps, bool usePinned);
 
 #endif

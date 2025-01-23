@@ -1,27 +1,8 @@
 #include "game_of_life.h"
+#include "save_to_file_util.c"
 
 #include <stdio.h>
 #include <stdlib.h>
-
-void saveGolStateToFile(bool *golState, const char *path, int size)
-{
-    FILE *file = fopen(path, "w");
-    if (file == NULL)
-    {
-        printf("Error: Unable to open file %s\n", path);
-        return;
-    }
-    for (int i = 0; i < size * size; ++i)
-    {
-        if (golState[i])
-            fprintf(file, "1");
-        else
-            fprintf(file, "0");
-        fprintf(file, ",");
-    }
-    fclose(file);
-    printf("Game of Life state saved to %s\n", path);
-}
 
 int main(int argc, char *argv[])
 {
@@ -45,56 +26,25 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    bool *golState;
-    bool *d_golState; // Device pointer
+    bool *hostState;
 
-    golState = (bool *)malloc(size * size * sizeof(bool));
-    if (golState == NULL)
+    hostState = (bool *)malloc(size * size * sizeof(bool));
+    if (hostState == NULL)
     {
         printf("Error: Failed to allocate memory on the host.\n");
         return 1;
     }
 
     srand((unsigned)time(NULL));
-    for (int i = 0; i < size * size; i++) golState[i] = rand() % 2;
-
-
-    if (cudaMalloc((void **)&d_golState, size * size * sizeof(bool)) != cudaSuccess)
-    {
-        printf("Error: Failed to allocate memory on the GPU.\n");
-        free(golState);
-        return 1;
-    }
-
-    if (cudaMemcpy(d_golState, golState, size * size * sizeof(bool), cudaMemcpyHostToDevice) != cudaSuccess)
-    {
-        printf("Error: Failed to copy memory from host to device.\n");
-        cudaFree(d_golState);
-        free(golState);
-        return 1;
-    }
-
-    saveGolStateToFile(golState, "pre.txt", size);
+    for (int i = 0; i < size * size; i++) hostState[i] = rand() % 2;
 
     // KERNEL CALL ///////////////////////////////////////////////
     
-    calculateGameOfLife(d_golState, size, numSteps);
+    calculateGameOfLife(hostState, size, numSteps, false);
 
     // KERNEL CALL ///////////////////////////////////////////////
 
-
-    if (cudaMemcpy(golState, d_golState, size * size * sizeof(bool), cudaMemcpyDeviceToHost) != cudaSuccess)
-    {
-        printf("Error: Failed to copy memory from device to host.\n");
-        cudaFree(d_golState);
-        free(golState);
-        return 1;
-    }
-
-    saveGolStateToFile(golState, "post.txt", size);
-
-    cudaFree(d_golState);
-    free(golState);
+    free(hostState);
 
     printf("Game of Life simulation completed successfully.\n");
     return 0;
