@@ -5,6 +5,6 @@ __device__ int countAliveNeis(int idx, bool *state, int size);
 
 __global__ void computeGameOfLifeStep(bool *currState, bool *nextState, int size);
 
-void calculateGameOfLife(bool *hostState, int size, int steps, bool usePinned);
+void calculateGameOfLife(bool *hostState, int size, int steps);
 
 #endif

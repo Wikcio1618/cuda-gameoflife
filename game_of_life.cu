@@ -40,47 +40,24 @@ __global__ void computeGameOfLifeStep(bool *currState, bool *nextState, int size
     }
 }
 
-void calculateGameOfLife(bool *hostState, int size, int steps, bool usePinned)
+void calculateGameOfLife(bool *hostState, int size, int steps)
 {
     bool *deviceState;
-    // Allocate memory according to usePinned flag
-    if (usePinned)
-    {
-        if (cudaMallocHost(&deviceState, size * size * sizeof(bool)) != cudaSuccess)
-        {
-            fprintf(stderr, "Error: Failed to allocate pinned memory for CUDA");
-        }
-    }
-    else if (cudaMalloc(&deviceState, size * size * sizeof(bool)) != cudaSuccess)
+    if (cudaMalloc(&deviceState, size * size * sizeof(bool)) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to allocate memory for CUDA");
     }
 
     // Copy memory from host to device
-    if (cudaMemcpy(deviceState, hostState, size * size * sizeof(bool), cudaMemcpyHostToDevice) != cudaSuccess)
+    if (cudaMemcpy(deviceState, hostState, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to copy memory from host to CUDA");
     }
 
     bool *deviceTempState;
-    // Allocate memory according to usePinned flag
-    if (usePinned)
-    {
-        if (cudaMallocHost(&deviceTempState, size * size * sizeof(bool)) != cudaSuccess)
-        {
-            fprintf(stderr, "Error: Failed to allocate pinned memory for CUDA");
-        }
-    }
-    else if (cudaMalloc(&deviceTempState, size * size * sizeof(bool)) != cudaSuccess)
+    if (cudaMalloc(&deviceTempState, size * size * sizeof(bool)) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to allocate memory for CUDA");
-    }
-
-    // Copy memory from host to device
-    if (cudaMemset(deviceTempState, 0, size * size * sizeof(bool)) != cudaSuccess)
-    {
-        fprintf(stderr, "Error: Failed to set memory for CUDA");
-        return;
     }
 
     dim3 threadsPerBlock(16, 16);
@@ -96,18 +73,12 @@ void calculateGameOfLife(bool *hostState, int size, int steps, bool usePinned)
         deviceTempState = temp;
     }
 
-    if (cudaMemcpy(hostState, deviceState, size * size * sizeof(bool), cudaMemcpyDeviceToHost) != cudaSuccess)
+    if (cudaMemcpy(hostState, deviceState, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to copy memory from CUDA to host");
         return;
     }
-
-    if (usePinned)
-        cudaFreeHost(deviceTempState);
-    else
-        cudaFree(deviceTempState);
-    if (usePinned)
-        cudaFreeHost(deviceState);
-    else
-        cudaFree(deviceState);
+    
+    cudaFree(deviceTempState);
+    cudaFree(deviceState);
 }

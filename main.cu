@@ -6,9 +6,9 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
-        printf("Usage: %s <grid_size> <num_steps>\n", argv[0]);
+        printf("Usage: %s <gridSize> <numSteps> <usePinned>\n", argv[0]);
         return 1;
     }
 
@@ -26,25 +26,34 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    bool *hostState;
-
-    hostState = (bool *)malloc(size * size * sizeof(bool));
-    if (hostState == NULL)
+    int usePinned = atoi(argv[3]);
+    if (usePinned != 0 && usePinned != 1)
     {
-        printf("Error: Failed to allocate memory on the host.\n");
+        printf("Error: usePinned is a flag and should be either 0 or 1.\n");
         return 1;
     }
 
+    bool *hostState;
+
+    if (usePinned)
+        cudaMallocHost(&hostState, size * size * sizeof(bool));
+    else
+        hostState = (bool *)malloc(size * size * sizeof(bool));
+
     srand((unsigned)time(NULL));
-    for (int i = 0; i < size * size; i++) hostState[i] = rand() % 2;
-
-    // KERNEL CALL ///////////////////////////////////////////////
-    
-    calculateGameOfLife(hostState, size, numSteps, false);
+    for (int i = 0; i < size * size; i++)
+        hostState[i] = rand() % 2;
 
     // KERNEL CALL ///////////////////////////////////////////////
 
-    free(hostState);
+    calculateGameOfLife(hostState, size, numSteps);
+
+    // KERNEL CALL ///////////////////////////////////////////////
+
+    if (usePinned)
+        cudaFreeHost(hostState);
+    else
+        free(hostState);
 
     printf("Game of Life simulation completed successfully.\n");
     return 0;
