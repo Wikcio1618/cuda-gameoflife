@@ -40,22 +40,22 @@ __global__ void computeGameOfLifeStep(bool *currState, bool *nextState, int size
     }
 }
 
-void calculateGameOfLife(bool *hostState, int size, int steps)
+void calculateGameOfLife(bool *host_state, int size, int num_steps)
 {
-    bool *deviceState;
-    if (cudaMalloc(&deviceState, size * size * sizeof(bool)) != cudaSuccess)
+    bool *device_state;
+    if (cudaMalloc(&device_state, size * size * sizeof(bool)) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to allocate memory for CUDA");
     }
 
     // Copy memory from host to device
-    if (cudaMemcpy(deviceState, hostState, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
+    if (cudaMemcpy(device_state, host_state, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to copy memory from host to CUDA");
     }
 
-    bool *deviceTempState;
-    if (cudaMalloc(&deviceTempState, size * size * sizeof(bool)) != cudaSuccess)
+    bool *device_temp_state;
+    if (cudaMalloc(&device_temp_state, size * size * sizeof(bool)) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to allocate memory for CUDA");
     }
@@ -63,22 +63,22 @@ void calculateGameOfLife(bool *hostState, int size, int steps)
     dim3 threadsPerBlock(16, 16);
     dim3 blocks((size + 15) / 16, (size + 15) / 16);
 
-    for (int i = 0; i < steps; ++i)
+    for (int i = 0; i < num_steps; ++i)
     {
-        computeGameOfLifeStep<<<blocks, threadsPerBlock>>>(deviceState, deviceTempState, size);
+        computeGameOfLifeStep<<<blocks, threadsPerBlock>>>(device_state, device_temp_state, size);
         cudaDeviceSynchronize();
 
-        bool *temp = deviceState;
-        deviceState = deviceTempState;
-        deviceTempState = temp;
+        bool *temp = device_state;
+        device_state = device_temp_state;
+        device_temp_state = temp;
     }
 
-    if (cudaMemcpy(hostState, deviceState, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
+    if (cudaMemcpy(host_state, device_state, size * size * sizeof(bool), cudaMemcpyDefault) != cudaSuccess)
     {
         fprintf(stderr, "Error: Failed to copy memory from CUDA to host");
         return;
     }
     
-    cudaFree(deviceTempState);
-    cudaFree(deviceState);
+    cudaFree(device_temp_state);
+    cudaFree(device_state);
 }

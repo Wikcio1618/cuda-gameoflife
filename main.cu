@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 4)
     {
-        printf("Usage: %s <gridSize> <numSteps> <usePinned>\n", argv[0]);
+        printf("Usage: %s <grid_size> <num_steps> <use_pinned>\n", argv[0]);
         return 1;
     }
 
@@ -19,41 +19,41 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int numSteps = atoi(argv[2]);
-    if (numSteps <= 0)
+    int num_steps = atoi(argv[2]);
+    if (num_steps <= 0)
     {
         printf("Error: Number of steps must be a positive integer.\n");
         return 1;
     }
 
-    int usePinned = atoi(argv[3]);
-    if (usePinned != 0 && usePinned != 1)
+    int use_pinned = atoi(argv[3]);
+    if (use_pinned != 0 && use_pinned != 1)
     {
-        printf("Error: usePinned is a flag and should be either 0 or 1.\n");
+        printf("Error: use_pinned is a flag and should be either 0 or 1.\n");
         return 1;
     }
 
-    bool *hostState;
+    bool *host_state;
 
-    if (usePinned)
-        cudaMallocHost(&hostState, size * size * sizeof(bool));
+    if (use_pinned)
+        cudaMallocHost(&host_state, size * size * sizeof(bool));
     else
-        hostState = (bool *)malloc(size * size * sizeof(bool));
+        host_state = (bool *)malloc(size * size * sizeof(bool));
 
     srand((unsigned)time(NULL));
     for (int i = 0; i < size * size; i++)
-        hostState[i] = rand() % 2;
+        host_state[i] = rand() % 2;
 
     // KERNEL CALL ///////////////////////////////////////////////
 
-    calculateGameOfLife(hostState, size, numSteps);
+    calculateGameOfLife(host_state, size, num_steps);
 
     // KERNEL CALL ///////////////////////////////////////////////
 
-    if (usePinned)
-        cudaFreeHost(hostState);
+    if (use_pinned)
+        cudaFreeHost(host_state);
     else
-        free(hostState);
+        free(host_state);
 
     printf("Game of Life simulation completed successfully.\n");
     return 0;

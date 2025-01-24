@@ -3,8 +3,8 @@
 
 __device__ int countAliveNeis(int idx, bool *state, int size);
 
-__global__ void computeGameOfLifeStep(bool *currState, bool *nextState, int size);
+__global__ void computeGameOfLifeStep(bool *curr_state, bool *next_state, int size);
 
-void calculateGameOfLife(bool *hostState, int size, int steps);
+void calculateGameOfLife(bool *host_state, int size, int num_steps);
 
 #endif
