@@ -5,4 +5,4 @@ Unpinned and pinned memory on the side of host were benchmarked against each oth
 
 |      Unpinned memory      |      Pinned memory      |
 | :----------------------: | :-----------------------: |
-| ![](./screennshots/nvprof_0.png) | ![](./screenshots/nvprof_1.png) |
+| ![](./screenshots/nvprof_0.png) | ![](./screenshots/nvprof_1.png) |
